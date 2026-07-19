@@ -1,21 +1,38 @@
-const multer = require('multer');
-const path = require('path');
-const crypto = require('crypto');
-const fs = require('fs');
-const AppError = require('../utils/appError');
-const { isCloudinaryConfigured } = require('../services/uploadService');
+const multer = require("multer");
+const path = require("path");
+const crypto = require("crypto");
+const fs = require("fs");
+const os = require("os");
+const AppError = require("../utils/appError");
+const { isCloudinaryConfigured } = require("../services/uploadService");
 
 let storage;
+
+const getUploadDir = () => {
+  const preferredDir =
+    process.env.UPLOADS_DIR ||
+    path.join(os.tmpdir(), "property-management-uploads");
+
+  try {
+    if (!fs.existsSync(preferredDir)) {
+      fs.mkdirSync(preferredDir, { recursive: true });
+    }
+    return preferredDir;
+  } catch (error) {
+    const fallbackDir = path.join(os.tmpdir(), "property-management-uploads");
+    if (!fs.existsSync(fallbackDir)) {
+      fs.mkdirSync(fallbackDir, { recursive: true });
+    }
+    return fallbackDir;
+  }
+};
 
 if (isCloudinaryConfigured) {
   // Use memory storage for direct Cloudinary stream uploading
   storage = multer.memoryStorage();
 } else {
-  // Ensure local uploads directory exists
-  const uploadsDir = path.join(__dirname, '../uploads');
-  if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-  }
+  // Use a writable temp directory so uploads work in Vercel/serverless environments
+  const uploadsDir = getUploadDir();
 
   // Use disk storage fallback
   storage = multer.diskStorage({
@@ -24,7 +41,7 @@ if (isCloudinaryConfigured) {
     },
     filename: (req, file, cb) => {
       // Create a unique name to prevent collisions
-      const uniqueSuffix = crypto.randomBytes(16).toString('hex');
+      const uniqueSuffix = crypto.randomBytes(16).toString("hex");
       const ext = path.extname(file.originalname);
       cb(null, `${Date.now()}-${uniqueSuffix}${ext}`);
     },
@@ -35,19 +52,37 @@ if (isCloudinaryConfigured) {
 const fileFilter = (req, file, cb) => {
   const allowedExtensions = [
     // Images
-    '.jpg', '.jpeg', '.png', '.webp', '.gif',
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".webp",
+    ".gif",
     // Videos
-    '.mp4', '.mov', '.avi', '.mkv',
+    ".mp4",
+    ".mov",
+    ".avi",
+    ".mkv",
     // Documents
-    '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt'
+    ".pdf",
+    ".doc",
+    ".docx",
+    ".xls",
+    ".xlsx",
+    ".txt",
   ];
 
   const ext = path.extname(file.originalname).toLowerCase();
-  
+
   if (allowedExtensions.includes(ext)) {
     cb(null, true);
   } else {
-    cb(new AppError(`Unsupported file format: ${ext}. Supported formats are images, videos, and documents.`, 400), false);
+    cb(
+      new AppError(
+        `Unsupported file format: ${ext}. Supported formats are images, videos, and documents.`,
+        400,
+      ),
+      false,
+    );
   }
 };
 

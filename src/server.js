@@ -6,7 +6,7 @@ process.on('uncaughtException', (err) => {
 });
 
 const dotenv = require('dotenv');
-// Load env vars
+// Load env varsx
 dotenv.config();
 
 const app = require('./app');
