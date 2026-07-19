@@ -79,7 +79,7 @@ app.use(compression());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // 2) ROUTES
-app.get("/", (req, res) => {
+app.get(["/", "/health"], (req, res) => {
   res.status(200).json({
     status: "success",
     message: "Property Management API is running",

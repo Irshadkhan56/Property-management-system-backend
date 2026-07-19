@@ -1,16 +1,30 @@
-const express = require('express');
-const Property = require('../models/propertyModel');
+const express = require("express");
+const Property = require("../models/propertyModel");
 
 const router = express.Router();
+
+// @desc    Health check for deployment
+// @route   GET /
+// @access  Public
+router.get("/", (req, res) => {
+  res.status(200).json({
+    status: "success",
+    message: "Property Management API is running",
+    timestamp: new Date().toISOString(),
+  });
+});
 
 // @desc    Generate XML Sitemap dynamically
 // @route   GET /sitemap.xml
 // @access  Public
-router.get('/sitemap.xml', async (req, res, next) => {
+router.get("/sitemap.xml", async (req, res, next) => {
   try {
-    const properties = await Property.find({ status: 'available' }, 'slug updatedAt');
-    
-    const host = req.get('host');
+    const properties = await Property.find(
+      { status: "available" },
+      "slug updatedAt",
+    );
+
+    const host = req.get("host");
     const protocol = req.protocol;
     const baseUrl = `${protocol}://${host}`;
 
@@ -43,7 +57,7 @@ router.get('/sitemap.xml', async (req, res, next) => {
 
     xml += `</urlset>`;
 
-    res.header('Content-Type', 'application/xml');
+    res.header("Content-Type", "application/xml");
     res.status(200).send(xml);
   } catch (error) {
     next(error);
@@ -53,8 +67,8 @@ router.get('/sitemap.xml', async (req, res, next) => {
 // @desc    Generate Robots.txt dynamically
 // @route   GET /robots.txt
 // @access  Public
-router.get('/robots.txt', (req, res) => {
-  const host = req.get('host');
+router.get("/robots.txt", (req, res) => {
+  const host = req.get("host");
   const protocol = req.protocol;
   const baseUrl = `${protocol}://${host}`;
 
@@ -65,7 +79,7 @@ router.get('/robots.txt', (req, res) => {
   txt += `Allow: /\n\n`;
   txt += `Sitemap: ${baseUrl}/sitemap.xml\n`;
 
-  res.header('Content-Type', 'text/plain');
+  res.header("Content-Type", "text/plain");
   res.status(200).send(txt);
 });
 
