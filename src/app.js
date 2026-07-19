@@ -79,6 +79,18 @@ app.use(compression());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // 2) ROUTES
+app.use((req, res, next) => {
+  if (req.path === "/" || req.path === "/health") {
+    res.status(200).json({
+      status: "success",
+      message: "Property Management API is running",
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+  next();
+});
+
 app.get(["/", "/health"], (req, res) => {
   res.status(200).json({
     status: "success",
